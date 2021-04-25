@@ -2,18 +2,45 @@ from urllib import request
 from bs4 import BeautifulSoup as BS
 import pandas as pd
 
+"""
+Initial script parameters
+"""
+
+# page parse limit
+page_limit = True  # page limit use
+page_limit_n = 3   # number of pages to parse
+
+# start URL
 given_url = 'https://www.otodom.pl/sprzedaz/mieszkanie/mazowieckie/?search%5Bregion_id%5D=7'
-sample_apt = 'https://www.otodom.pl/pl/oferta/apartament-z-tarasem-i-widokiem-na-panorame-ID4b16n.html#21655ad6d5'
 
 
 def get_list(url):
-    html = request.urlopen(url)
-    bs = BS(html.read(), 'html.parser')
-    apt_list = bs.find_all('a', attrs={'data-featured-name': ["listing_no_promo", "promo_top_ads"]})
-    return list(set([tag['href'] for tag in apt_list]))
+    """
+    Get list of item's URL to parse
+    :param url: start URL
+    :return: items URL list
+    """
+    next_page = url
+    counter = 0
+    res = []
+    while (next_page is not None) & ((not page_limit) | ((counter < page_limit_n) & page_limit)):
+        print('Page {}'.format(counter + 1))
+        html = request.urlopen(url)
+        bs = BS(html.read(), 'html.parser')
+        apt_list = bs.find_all('a', attrs={'data-featured-name': ["listing_no_promo", "promo_top_ads"]})
+        res.extend(list(set([tag['href'] for tag in apt_list])))
+
+        next_page = bs.find('a', attrs={'data-dir': 'next'})['href']
+        counter += 1
+    return res
 
 
 def get_item(url):
+    """
+    Get item's data on given URL
+    :param url:
+    :return: data as dictionary
+    """
     html = request.urlopen(url)
     bs = BS(html.read(), 'html.parser')
     names = bs.find_all('div', attrs={'class': 'css-o4i8bk ev4i3ak2'})

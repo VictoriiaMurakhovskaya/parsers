@@ -53,5 +53,5 @@ class OtodomTableSpider(scrapy.Spider):
             if content:
                 res.update({name: content})
 
-        # yields result
+        # yields results
         yield res
